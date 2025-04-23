@@ -1,45 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>FFStalk Viewer</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        img { max-height: 50px; margin-right: 10px; }
-        .equipped { display: flex; flex-wrap: wrap; }
-    </style>
+  <meta charset="UTF-8">
+  <title>FFStalk Web</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { padding: 8px; margin-bottom: 10px; }
+    img { max-width: 100px; }
+    .equipped { display: flex; flex-wrap: wrap; gap: 10px; }
+  </style>
 </head>
 <body>
-    <h1>Free Fire Stalker</h1>
-    <input type="text" id="uid" placeholder="Enter Free Fire UID">
-    <button onclick="getData()">Search</button>
+  <h1>Free Fire Profile Lookup</h1>
+  <input type="text" id="uid" placeholder="Enter Free Fire UID">
+  <button onclick="ffStalk()">Search</button>
+  <div id="output"></div>
 
-    <div id="result"></div>
+  <script>
+    async function ffStalk() {
+      const uid = document.getElementById('uid').value;
+      const output = document.getElementById('output');
+      output.innerHTML = "Loading...";
 
-    <script>
-        async function getData() {
-            const uid = document.getElementById('uid').value
-            const res = await fetch(`/api/stalk/${uid}`)
-            const data = await res.json()
+      const form = new URLSearchParams();
+      form.append('uid', uid);
 
-            const resultDiv = document.getElementById('result')
-            resultDiv.innerHTML = `
-                <h2>${data.name}</h2>
-                <p><strong>Level:</strong> ${data.level}</p>
-                <p><strong>Bio:</strong> ${data.bio}</p>
-                <p><strong>Region:</strong> ${data.region}</p>
-                <p><strong>BR Rank:</strong> ${data.brRank} (${data.brRankPoint})</p>
-                <h3>Equipped Items</h3>
-                <div class="equipped">
-                    ${data.equippedItems.map(item => `
-                        <div>
-                            <img src="${item.img}" alt="${item.name}">
-                            <p>${item.name}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            `
+      try {
+        const response = await fetch(`https://corsproxy.io/?https://tools.freefireinfo.in/profileinfo.php?success=1`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: form
+        });
+
+        const htmlText = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        const raw = doc.querySelector('div.result')?.innerHTML?.split('<br>');
+
+        if (!raw || raw.length < 10) {
+          output.innerHTML = 'Data not found or UID invalid.';
+          return;
         }
-    </script>
+
+        const name = raw[0].split('Name: ')[1];
+        const level = raw[3].split(': ')[1];
+        const region = raw[5].split(': ')[1];
+        const bio = raw[14].split(': ')[1];
+
+        const equipped = Array.from(doc.querySelectorAll('.equipped-item')).map(el => {
+          return {
+            name: el.querySelector('p')?.innerText,
+            img: el.querySelector('img')?.src
+          }
+        });
+
+        output.innerHTML = `
+          <h2>${name}</h2>
+          <p><strong>Level:</strong> ${level}</p>
+          <p><strong>Region:</strong> ${region}</p>
+          <p><strong>Bio:</strong> ${bio}</p>
+          <h3>Equipped Items:</h3>
+          <div class="equipped">
+            ${equipped.map(item => `
+              <div>
+                <img src="${item.img}" alt="${item.name}">
+                <p>${item.name}</p>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        output.innerHTML = `Error: ${err.message}`;
+      }
+    }
+  </script>
 </body>
 </html>
