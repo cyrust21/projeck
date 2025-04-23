@@ -28,6 +28,7 @@ async function ffStalk(id){
     console.log(data);
     const $ = cheerio.load(data)
     let tr = $('div.result').html().split('<br>')
+    console.log('Result div:', htmlResult);
     let name = tr[0].split('Name: ')[1]
     let bio = tr[14].split(': ')[1]
     let like = tr[2].split(': ')[1]
