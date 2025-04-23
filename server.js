@@ -10,9 +10,11 @@ app.get('/api/ffstalk/:uid', async (req, res) => {
     const data = await ffStalk(req.params.uid)
     res.json(data)
   } catch (err) {
+    console.error('FFStalk error:', err) // ini penting
     res.status(500).json({ error: 'Failed to fetch data' })
   }
 })
+
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
