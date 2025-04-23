@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FFStalk Viewer</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        img { max-height: 50px; margin-right: 10px; }
+        .equipped { display: flex; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <h1>Free Fire Stalker</h1>
+    <input type="text" id="uid" placeholder="Enter Free Fire UID">
+    <button onclick="getData()">Search</button>
+
+    <div id="result"></div>
+
+    <script>
+        async function getData() {
+            const uid = document.getElementById('uid').value
+            const res = await fetch(`/api/stalk/${uid}`)
+            const data = await res.json()
+
+            const resultDiv = document.getElementById('result')
+            resultDiv.innerHTML = `
+                <h2>${data.name}</h2>
+                <p><strong>Level:</strong> ${data.level}</p>
+                <p><strong>Bio:</strong> ${data.bio}</p>
+                <p><strong>Region:</strong> ${data.region}</p>
+                <p><strong>BR Rank:</strong> ${data.brRank} (${data.brRankPoint})</p>
+                <h3>Equipped Items</h3>
+                <div class="equipped">
+                    ${data.equippedItems.map(item => `
+                        <div>
+                            <img src="${item.img}" alt="${item.name}">
+                            <p>${item.name}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `
+        }
+    </script>
+</body>
+</html>
