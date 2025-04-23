@@ -96,3 +96,4 @@ async function ffStalk(id){
         equippedItems
     }
 }
+module.exports = ffStalk;
